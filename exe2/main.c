@@ -15,6 +15,21 @@ const int LED_PIN_G = 6;
 SemaphoreHandle_t xSemaphore_r;
 SemaphoreHandle_t xSemaphore_g;
 
+TaskHandle_t xTaskBtn_r = NULL;
+TaskHandle_t xTaskBtn_g = NULL;
+
+
+void btn_r_isr(uint gpio, uint32_t events) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(xTaskBtn_r, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+void btn_g_isr(uint gpio, uint32_t events) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(xTaskBtn_g, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
 
 void led_1_task(void *p) {
   gpio_init(LED_PIN_R);
@@ -37,14 +52,11 @@ void btn_1_task(void *p) {
   gpio_init(BTN_PIN_R);
   gpio_set_dir(BTN_PIN_R, GPIO_IN);
   gpio_pull_up(BTN_PIN_R);
+  gpio_set_irq_enabled_with_callback(BTN_PIN_R, GPIO_IRQ_EDGE_FALL, true, &btn_r_isr);
 
   while (true) {
-    if (!gpio_get(BTN_PIN_R)) {
-      while (!gpio_get(BTN_PIN_R)) {
-        vTaskDelay(pdMS_TO_TICKS(1));
-      }
-      xSemaphoreGive(xSemaphore_r);
-    }
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    xSemaphoreGive(xSemaphore_r);
   }
 }
 
@@ -69,14 +81,11 @@ void btn_2_task(void *p) {
   gpio_init(BTN_PIN_G);
   gpio_set_dir(BTN_PIN_G, GPIO_IN);
   gpio_pull_up(BTN_PIN_G);
+  gpio_set_irq_enabled_with_callback(BTN_PIN_G, GPIO_IRQ_EDGE_FALL, true, &btn_g_isr);
 
   while (true) {
-    if (!gpio_get(BTN_PIN_G)) {
-      while (!gpio_get(BTN_PIN_G)) {
-        vTaskDelay(pdMS_TO_TICKS(1));
-      }
+      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
       xSemaphoreGive(xSemaphore_g);
-    }
   }
 }
 
