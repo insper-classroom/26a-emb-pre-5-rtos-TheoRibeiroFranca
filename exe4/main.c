@@ -63,7 +63,7 @@ void btn_1_task(void *p) {
                 delay = 100;
             }
             printf("delay btn %d \n", delay);
-            xQueueSendFromISR(xQueueButId_r, &delay, 0);
+            xQueueSend(xQueueButId_r, &delay, 0);
         }
     }
 }
@@ -103,7 +103,7 @@ void btn_2_task(void *p) {
                 delay = 100;
             }
             printf("delay btn %d \n", delay);
-            xQueueSendFromISR(xQueueButId_g, &delay, 0);
+            xQueueSend(xQueueButId_g, &delay, 0);
         }
     }
 }
